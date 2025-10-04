@@ -1,5 +1,6 @@
 import { ChunkSplitor } from './ChunkSplitor';
-import { Chunk, calcChunkHash } from './Chunk';
+import type { Chunk } from './Chunk';
+import { calcChunkHash } from './Chunk';
 import { EventEmitter } from './EventEmitter';
 
 /**
@@ -34,7 +35,12 @@ export class MultiThreadSplitor extends ChunkSplitor {
    * @param emitter 事件发射器
    */
   calcHash(chunks: Chunk[], emitter: EventEmitter<'chunks'>): void {
+    console.log('🧵 MultiThreadSplitor.calcHash() 开始');
+    console.log('🧵 Worker数量:', this.workers.length);
+    console.log('🧵 分片数量:', chunks.length);
+    
     const workerSize = Math.ceil(chunks.length / this.workers.length);
+    console.log('🧵 每个Worker处理分片数:', workerSize);
     
     for (let i = 0; i < this.workers.length; i++) {
       const worker = this.workers[i];
@@ -42,10 +48,13 @@ export class MultiThreadSplitor extends ChunkSplitor {
       const end = Math.min((i + 1) * workerSize, chunks.length);
       const workerChunks = chunks.slice(start, end);
       
+      console.log(`🧵 Worker ${i} 处理分片 ${start}-${end-1}, 数量: ${workerChunks.length}`);
+      
       if (workerChunks.length === 0) continue;
       
       worker.postMessage(workerChunks);
       worker.onmessage = (e) => {
+        console.log(`🧵 Worker ${i} 返回结果:`, e.data.length, '个分片');
         emitter.emit('chunks', e.data);
       };
     }

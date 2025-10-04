@@ -11,6 +11,9 @@ export interface Chunk {
   index: number; // 分片在文件中的索引
 }
 
+// 同时导出类型别名，确保兼容性
+export type { Chunk as ChunkType };
+
 /**
  * 创建一个不带hash的chunk
  * @param file 文件对象

@@ -3,7 +3,8 @@
   "include": [
     "env.d.ts",
     "src/**/*",
-    "src/**/*.tsx"
+    "src/**/*.tsx",
+    "src/**/*.d.ts"
   ],
   "exclude": [
     "src/**/__tests__/*"
@@ -27,6 +28,7 @@
     "strict": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
-    "noFallthroughCasesInSwitch": true
+    "noFallthroughCasesInSwitch": true,
+    "skipLibCheck": true
   }
 }

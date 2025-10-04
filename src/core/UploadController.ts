@@ -1,8 +1,8 @@
 import { EventEmitter } from './EventEmitter';
 import { TaskQueue, Task } from './TaskQueue';
 import { ChunkSplitor } from './ChunkSplitor';
-import { RequestStrategy } from './RequestStrategy';
-import { Chunk } from './Chunk';
+import type { RequestStrategy } from './RequestStrategy';
+import type { Chunk } from './Chunk';
 import { MultiThreadSplitor } from './MultiThreadSplitor';
 
 /**
@@ -89,14 +89,28 @@ export class UploadController extends EventEmitter<UploadControllerEvents> {
    * 初始化上传
    */
   async init() {
+    console.log('🔧 UploadController.init() 开始');
+    console.log('🔧 文件信息:', {
+      name: this.file.name,
+      size: this.file.size,
+      type: this.file.type
+    });
+    
     try {
+      console.log('🔧 调用requestStrategy.createFile...');
       // 获取文件token
       this.token = await this.requestStrategy.createFile(this.file);
+      console.log('🔧 获取到token:', this.token);
+      
+      console.log('🔧 触发start事件');
       this.emit('start');
       
+      console.log('🔧 开始分片处理...');
       // 开始分片
       this.splitStrategy.split();
+      console.log('🔧 分片处理已启动');
     } catch (error) {
+      console.error('❌ UploadController.init() 失败:', error);
       this.emit('error', error);
     }
   }
@@ -106,8 +120,16 @@ export class UploadController extends EventEmitter<UploadControllerEvents> {
    * @param chunks 分片数组
    */
   private handleChunks(chunks: Chunk[]) {
+    console.log('📦 处理分片事件，分片数量:', chunks.length);
+    console.log('📦 分片详情:', chunks.map(c => ({
+      index: c.index,
+      size: c.blob.size,
+      hash: c.hash
+    })));
+    
     // 更新总分片数
     this.progress.totalChunks = this.splitStrategy.getChunkCount();
+    console.log('📦 总分片数:', this.progress.totalChunks);
     
     // 分片上传任务加入队列
     chunks.forEach((chunk) => {
@@ -115,6 +137,7 @@ export class UploadController extends EventEmitter<UploadControllerEvents> {
       this.taskQueue.add(task);
     });
     
+    console.log('📦 任务已添加到队列，启动任务队列...');
     // 启动任务队列
     this.taskQueue.start();
   }

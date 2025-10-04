@@ -1,5 +1,5 @@
-import { RequestStrategy, HashCheckResult } from './RequestStrategy';
-import { Chunk } from './Chunk';
+import type { RequestStrategy, HashCheckResult } from './RequestStrategy';
+import type { Chunk } from './Chunk';
 
 /**
  * 模拟请求策略实现
@@ -17,10 +17,20 @@ export class MockRequestStrategy implements RequestStrategy {
    * 创建文件上传会话
    */
   async createFile(file: File): Promise<string> {
+    console.log('🌐 MockRequestStrategy.createFile() 开始');
+    console.log('🌐 文件信息:', {
+      name: file.name,
+      size: file.size,
+      type: file.type
+    });
+    
     // 模拟网络延迟
+    console.log('🌐 模拟网络延迟...');
     await this.delay(500);
     
     const token = this.generateToken();
+    console.log('🌐 生成token:', token);
+    
     this.tokens.set(token, {
       file,
       chunks: new Map(),
@@ -28,7 +38,7 @@ export class MockRequestStrategy implements RequestStrategy {
       isCompleted: false
     });
     
-    console.log('创建文件上传会话:', token);
+    console.log('🌐 创建文件上传会话成功:', token);
     return token;
   }
 

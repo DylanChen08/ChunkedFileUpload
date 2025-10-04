@@ -1,5 +1,6 @@
 import { EventEmitter } from './EventEmitter';
-import { Chunk, createChunk } from './Chunk';
+import type { Chunk } from './Chunk';
+import { createChunk } from './Chunk';
 import SparkMD5 from 'spark-md5';
 
 /**
@@ -38,23 +39,34 @@ export abstract class ChunkSplitor extends EventEmitter<ChunkSplitorEvents> {
    * 开始分片
    */
   split() {
+    console.log('🔪 ChunkSplitor.split() 开始');
+    console.log('🔪 文件大小:', this.file.size);
+    console.log('🔪 分片大小:', this.chunkSize);
+    console.log('🔪 总分片数:', this.chunks.length);
+    
     if (this.hasSplited) {
+      console.log('🔪 已经分片过了，跳过');
       return;
     }
     this.hasSplited = true;
     const emitter = new EventEmitter<'chunks'>();
     
     const chunksHandler = (chunks: Chunk[]) => {
+      console.log('🔪 收到分片计算结果:', chunks.length, '个分片');
       this.emit('chunks', chunks);
       chunks.forEach((chunk) => {
         this.spark.append(chunk.hash);
       });
       this.handleChunkCount += chunks.length;
       
+      console.log('🔪 已处理分片数:', this.handleChunkCount, '/', this.chunks.length);
+      
       if (this.handleChunkCount === this.chunks.length) {
         // 计算完成
+        console.log('🔪 所有分片hash计算完成，计算整体hash...');
         emitter.off('chunks', chunksHandler);
         this.hash = this.spark.end();
+        console.log('🔪 整体hash:', this.hash);
         this.emit('wholeHash', this.hash);
         this.spark.destroy();
         this.emit('drain');
@@ -62,6 +74,7 @@ export abstract class ChunkSplitor extends EventEmitter<ChunkSplitorEvents> {
     };
     
     emitter.on('chunks', chunksHandler);
+    console.log('🔪 开始计算分片hash...');
     this.calcHash(this.chunks, emitter);
   }
 
