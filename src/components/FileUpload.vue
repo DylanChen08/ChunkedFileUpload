@@ -19,8 +19,8 @@
               @dragenter.prevent
               @drop="handleDrop"
             >
-              <el-icon size="10" color="#409EFF" style="font-size: 10px !important;">
-                <Upload />
+              <el-icon size="48" color="#409EFF">
+                <Folder />
               </el-icon>
               <div class="upload-text">
                 <p>点击或拖拽文件到此区域上传</p>
@@ -42,7 +42,6 @@
         <div class="upload-controls">
           <el-button
             type="primary"
-            size="large"
             :disabled="!selectedFile || isUploading"
             @click="startUpload"
           >
@@ -90,10 +89,10 @@
 <script setup lang="ts">
 import { ref, reactive, onUnmounted } from 'vue';
 import { ElMessage } from 'element-plus';
-import { Upload, VideoPlay, VideoPause } from '@element-plus/icons-vue';
+import { Folder, VideoPlay, VideoPause } from '@element-plus/icons-vue';
 import { UploadController } from '../core/UploadController';
 import type { UploadProgress } from '../core/UploadController';
-import { MockRequestStrategy } from '../core/MockRequestStrategy';
+import { ApiRequestStrategy } from '../core/ApiRequestStrategy';
 
 const uploadController = ref<UploadController | null>(null);
 const isUploading = ref(false);
@@ -178,8 +177,8 @@ const startUpload = async () => {
 
   try {
     console.log('🔧 创建请求策略...');
-    // 创建请求策略（这里使用模拟实现）
-    const requestStrategy = new MockRequestStrategy();
+    // 创建请求策略（使用真实API实现）
+    const requestStrategy = new ApiRequestStrategy('http://localhost:3000');
     console.log('🔧 请求策略创建成功:', requestStrategy);
     
     console.log('🔧 创建上传控制器...');
@@ -282,7 +281,7 @@ onUnmounted(() => {
 }
 
 .upload-card {
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  /* box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1); */
   border-radius: 16px;
   backdrop-filter: blur(10px);
   background: rgba(255, 255, 255, 0.95);
@@ -295,22 +294,26 @@ onUnmounted(() => {
 .upload-dragger {
   width: 100%;
   margin-bottom: 20px;
+  display: flex;
+  justify-content: center;
 }
 
 .upload-area {
+  width: 300px;
+  height: 300px;
+  margin: 0 auto;
   padding: 20px;
   text-align: center;
   border: 2px dashed #d9d9d9;
   border-radius: 8px;
   background: #fafafa;
   transition: all 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
 }
 
-.upload-area .el-icon {
-  font-size: 10px !important;
-  width: 10px !important;
-  height: 10px !important;
-}
 
 .upload-area:hover {
   border-color: #409EFF;
@@ -318,13 +321,15 @@ onUnmounted(() => {
 }
 
 .upload-text p {
-  margin: 10px 0;
+  margin: 8px 0;
   color: #666;
+  font-size: 14px;
 }
 
 .upload-hint {
-  font-size: 0.9rem;
+  font-size: 12px;
   color: #999;
+  margin-top: 5px;
 }
 
 .file-info {
@@ -350,6 +355,53 @@ onUnmounted(() => {
   gap: 15px;
   margin-bottom: 20px;
   flex-wrap: wrap;
+}
+
+/* 确保ElementPlus按钮样式正确显示 */
+.upload-controls .el-button {
+  min-width: 120px;
+  height: 40px;
+  border-radius: 6px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.upload-controls .el-button--primary {
+  background: #409EFF;
+  border-color: #409EFF;
+  color: white;
+}
+
+.upload-controls .el-button--primary:hover {
+  background: #66b1ff;
+  border-color: #66b1ff;
+}
+
+.upload-controls .el-button--success {
+  background: #67c23a;
+  border-color: #67c23a;
+  color: white;
+}
+
+.upload-controls .el-button--success:hover {
+  background: #85ce61;
+  border-color: #85ce61;
+}
+
+.upload-controls .el-button--warning {
+  background: #e6a23c;
+  border-color: #e6a23c;
+  color: white;
+}
+
+.upload-controls .el-button--warning:hover {
+  background: #ebb563;
+  border-color: #ebb563;
+}
+
+.upload-controls .el-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .upload-progress {

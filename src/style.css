@@ -1,8 +1,12 @@
 /* 全局样式 */
 * {
+  box-sizing: border-box;
+}
+
+/* 重置基础元素样式，但保留ElementPlus组件样式 */
+body, h1, h2, h3, h4, h5, h6, p, div, span {
   margin: 0;
   padding: 0;
-  box-sizing: border-box;
 }
 
 body {
@@ -40,7 +44,7 @@ body {
 }
 
 .upload-card {
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  /* box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1); */
   border-radius: 16px;
   backdrop-filter: blur(10px);
   background: rgba(255, 255, 255, 0.95);

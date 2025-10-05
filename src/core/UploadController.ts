@@ -97,9 +97,13 @@ export class UploadController extends EventEmitter<UploadControllerEvents> {
     });
     
     try {
-      console.log('🔧 调用requestStrategy.createFile...');
-      // 获取文件token
-      this.token = await this.requestStrategy.createFile(this.file);
+      console.log('🔧 创建上传会话...');
+      // 创建上传会话
+      this.token = await this.requestStrategy.createUploadSession(
+        this.file.name,
+        this.file.size,
+        this.requestStrategy.getChunkSize()
+      );
       console.log('🔧 获取到token:', this.token);
       
       console.log('🔧 触发start事件');
@@ -153,7 +157,7 @@ export class UploadController extends EventEmitter<UploadControllerEvents> {
 
     try {
       // hash校验
-      const resp = await this.requestStrategy.patchHash(this.token, chunk.hash, 'chunk');
+      const resp = await this.requestStrategy.checkHash(chunk.hash, 'chunk');
       
       if (resp.hasFile) {
         // 分片已存在，直接标记为完成
@@ -163,13 +167,7 @@ export class UploadController extends EventEmitter<UploadControllerEvents> {
       }
 
       // 分片上传
-      await this.requestStrategy.uploadChunk(
-        chunk, 
-        this.token, 
-        (progress) => {
-          // 这里可以处理单个分片的上传进度
-        }
-      );
+      await this.requestStrategy.uploadChunk(chunk);
 
       this.updateProgress(chunk.blob.size);
       this.emit('chunkComplete', chunk);
@@ -185,7 +183,7 @@ export class UploadController extends EventEmitter<UploadControllerEvents> {
   private async handleWholeHash(hash: string) {
     try {
       // 文件hash校验
-      const resp = await this.requestStrategy.patchHash(this.token, hash, 'file');
+      const resp = await this.requestStrategy.checkHash(hash, 'file');
       
       if (resp.hasFile) {
         // 文件已存在
@@ -226,8 +224,16 @@ export class UploadController extends EventEmitter<UploadControllerEvents> {
    */
   private async handleAllChunksUploaded() {
     try {
+      // 获取文件整体hash
+      const fileHash = await this.splitStrategy.getWholeHash();
+      console.log('🔗 文件整体hash:', fileHash);
+      
       // 请求合并文件
-      const fileUrl = await this.requestStrategy.mergeFile(this.token);
+      const fileUrl = await this.requestStrategy.mergeFile(
+        fileHash,
+        this.file.name,
+        this.file.size
+      );
       this.emit('end', fileUrl);
     } catch (error) {
       this.emit('error', error);
