@@ -55,6 +55,7 @@ export class EventEmitter<T extends string> {
     if (!this.events.has(event)) {
       return;
     }
+    // 遍历所有注册到该事件的监听器，并依次调用它们，传递事件参数
     this.events.get(event)!.forEach((listener) => {
       listener(...args);
     });

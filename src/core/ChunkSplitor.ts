@@ -15,6 +15,10 @@ export type ChunkSplitorEvents = 'chunks' | 'wholeHash' | 'drain';
  * 分片器抽象类
  * 使用模板模式，提供不同的分片策略
  */
+// 这里使用 abstract 是因为 ChunkSplitor 只是一个分片器的抽象基类，
+// 它定义了分片的通用流程和接口，但具体的分片策略（如顺序分片、并发分片等）
+// 需要由子类实现。abstract 关键字可以防止直接实例化该类，
+// 并强制子类实现必要的方法（如 split 等），以保证分片器的灵活扩展性和规范性。
 export abstract class ChunkSplitor extends EventEmitter<ChunkSplitorEvents> {
   protected chunkSize: number; // 分片大小（单位字节）
   protected file: File; // 待分片的文件
@@ -25,11 +29,19 @@ export abstract class ChunkSplitor extends EventEmitter<ChunkSplitorEvents> {
   private hasSplited = false; // 是否已经分片
 
   constructor(file: File, chunkSize: number = 1024 * 1024 * 5) {
+    // 意思是调用父类 EventEmitter 的构造函数，初始化继承的属性和方法
     super();
     this.file = file;
     this.chunkSize = chunkSize;
     // 获取分片数组
+    // 为什么是 Math.ceil？
+    // 因为文件大小不一定能被 chunkSize 整除，最后一块可能不足一个 chunkSize，
+    // 但仍然需要分一个分片出来，所以要向上取整，保证所有数据都被分片覆盖。
     const chunkCount = Math.ceil(this.file.size / this.chunkSize);
+    // 这里生成分片数组。new Array(chunkCount) 创建一个长度为 chunkCount 的空数组，
+    // .fill(0) 用 0 填充（只是为了让 map 能遍历每一项），
+    // .map((_, index) => createChunk(this.file, index, this.chunkSize)) 对每个索引调用 createChunk，
+    // 这样每个分片都包含了对应的二进制数据、起止位置、索引等信息。
     this.chunks = new Array(chunkCount)
       .fill(0)
       .map((_, index) => createChunk(this.file, index, this.chunkSize));

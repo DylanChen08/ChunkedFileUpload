@@ -5,6 +5,7 @@
         <h1>大文件分片上传示例</h1>
         <p>基于Vue3 + ElementPlus实现的大文件分片上传功能</p>
       </div>
+      <ConfigPanel />
       <FileUpload />
     </div>
   </el-config-provider>
@@ -13,6 +14,7 @@
 <script setup lang="ts">
 import { ElConfigProvider } from 'element-plus';
 import zhCn from 'element-plus/es/locale/lang/zh-cn';
+import ConfigPanel from './components/ConfigPanel.vue';
 import FileUpload from './components/FileUpload.vue';
 
 console.log('🎯 App组件已加载');

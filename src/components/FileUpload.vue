@@ -1,6 +1,18 @@
 <template>
   <div class="file-upload-container">
-    <el-card header="大文件分片上传示例" class="upload-card">
+    <el-card class="upload-card">
+      <template #header>
+        <div class="card-header">
+          <span>大文件分片上传示例</span>
+          <el-tag 
+            :type="currentMode === 'api' ? 'success' : 'info'" 
+            size="small"
+            class="mode-tag"
+          >
+            {{ currentMode === 'api' ? '后端API' : '前端模拟' }}
+          </el-tag>
+        </div>
+      </template>
       <div class="upload-content">
         <!-- 文件选择区域 -->
         <div class="file-selector">
@@ -49,16 +61,23 @@
           </el-button>
           
           <el-button
-            v-if="isUploading"
-            :type="isPaused ? 'success' : 'warning'"
+            v-if="isUploading && isPaused"
+            type="success"
             size="large"
             @click="togglePause"
           >
-            <el-icon>
-              <VideoPlay v-if="isPaused" />
-              <VideoPause v-else />
-            </el-icon>
-            {{ isPaused ? '恢复上传' : '暂停上传' }}
+            <el-icon><VideoPlay /></el-icon>
+            恢复上传
+          </el-button>
+          
+          <el-button
+            v-if="isUploading && !isPaused"
+            type="warning"
+            size="large"
+            @click="togglePause"
+          >
+            <el-icon><VideoPause /></el-icon>
+            暂停上传
           </el-button>
         </div>
 
@@ -87,12 +106,13 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onUnmounted } from 'vue';
+import { ref, reactive, onUnmounted, watch } from 'vue';
 import { ElMessage } from 'element-plus';
 import { Folder, VideoPlay, VideoPause } from '@element-plus/icons-vue';
 import { UploadController } from '../core/UploadController';
 import type { UploadProgress } from '../core/UploadController';
-import { ApiRequestStrategy } from '../core/ApiRequestStrategy';
+import { HybridRequestStrategy } from '../core/HybridRequestStrategy';
+import { configManager } from '../config/uploadConfig';
 
 const uploadController = ref<UploadController | null>(null);
 const isUploading = ref(false);
@@ -107,6 +127,12 @@ const progress = reactive<UploadProgress>({
 const fileUrl = ref('');
 const selectedFile = ref<File | null>(null);
 const fileInput = ref<HTMLInputElement>();
+
+// 混合请求策略实例
+const hybridStrategy = ref<HybridRequestStrategy | null>(null);
+
+// 当前模式
+const currentMode = ref(configManager.getMode());
 
 // 触发文件选择
 const triggerFileSelect = () => {
@@ -176,16 +202,19 @@ const startUpload = async () => {
   }
 
   try {
-    console.log('🔧 创建请求策略...');
-    // 创建请求策略（使用真实API实现）
-    const requestStrategy = new ApiRequestStrategy('http://localhost:3000');
-    console.log('🔧 请求策略创建成功:', requestStrategy);
+    console.log('🔧 创建混合请求策略...');
+    // 创建混合请求策略（根据配置自动选择API或Mock模式）
+    hybridStrategy.value = new HybridRequestStrategy();
+    console.log('🔧 混合请求策略创建成功:', hybridStrategy.value);
+    console.log('🔧 当前模式:', hybridStrategy.value.getCurrentMode());
     
     console.log('🔧 创建上传控制器...');
     // 创建上传控制器
     uploadController.value = new UploadController(
       selectedFile.value,
-      requestStrategy
+      hybridStrategy.value,
+      undefined, // 使用默认分片策略
+      configManager.getConcurrency()
     );
     console.log('🔧 上传控制器创建成功:', uploadController.value);
 
@@ -265,6 +294,12 @@ const formatFileSize = (bytes: number): string => {
   return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
 };
 
+// 监听配置变化
+watch(() => configManager.getMode(), (newMode) => {
+  currentMode.value = newMode;
+  console.log('🔧 模式已更新:', newMode);
+});
+
 // 清理资源
 onUnmounted(() => {
   if (uploadController.value) {
@@ -285,6 +320,16 @@ onUnmounted(() => {
   border-radius: 16px;
   backdrop-filter: blur(10px);
   background: rgba(255, 255, 255, 0.95);
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.mode-tag {
+  font-weight: 500;
 }
 
 .upload-content {
