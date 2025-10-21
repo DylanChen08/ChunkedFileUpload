@@ -98,7 +98,7 @@ export class ApiRequestStrategy implements RequestStrategy {
     console.log('📤 上传分片:', { 
       index: chunk.index, 
       hash: chunk.hash, 
-      size: chunk.size,
+      size: chunk.blob.size,
       uploadToken: this.uploadToken 
     });
 
@@ -111,7 +111,7 @@ export class ApiRequestStrategy implements RequestStrategy {
       formData.append('uploadToken', this.uploadToken);
       formData.append('chunkIndex', chunk.index.toString());
       formData.append('chunkHash', chunk.hash);
-      formData.append('chunk', chunk.data);
+      formData.append('chunk', chunk.blob);
 
       const response = await fetch(`${this.apiBase}/upload/chunk`, {
         method: 'POST',
