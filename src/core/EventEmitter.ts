@@ -56,7 +56,13 @@ export class EventEmitter<T extends string> {
       return;
     }
     // 遍历所有注册到该事件的监听器，并依次调用它们，传递事件参数
+    // 为什么是 get？
+    // 因为 this.events 是一个 Map，存储了每个事件名对应的监听器集合（Set）。
+    // 通过 get(event) 可以获取到当前事件名对应的所有监听器集合，然后遍历调用。
+    // 这里用的是 Map 的 get 方法获取对应事件的监听器集合（Set），
+    // 然后遍历 Set 调用每个监听器。
     this.events.get(event)!.forEach((listener) => {
+      // listener 是在 on、once 等方法中注册到 this.events 的监听函数，通过 emit 事件时从 this.events.get(event) 获取到并遍历调用
       listener(...args);
     });
   }

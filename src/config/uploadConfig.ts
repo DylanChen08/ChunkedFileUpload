@@ -185,3 +185,4 @@ export class ConfigManager {
  * 全局配置管理器实例
  */
 export const configManager = new ConfigManager();
+
